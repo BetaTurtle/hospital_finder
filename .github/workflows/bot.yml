@@ -1,12 +1,12 @@
 name: citagbot
 
 on:
-  schedule:
-    # every 10 minutes the job will run
-    - cron: "* */2 * * *"
+  # schedule:
+  #   # every 10 minutes the job will run
+  #   - cron: "* */2 * * *"
   push:
     branches:
-      - main
+      - master
   repository_dispatch:
     types: [my-event]
 jobs:
