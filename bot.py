@@ -32,6 +32,18 @@ except:
     logging.warning("No Bin. Won't Bin")
 BIN_MAX_LENGTH = 3000
 
+# Save the SHEET_SECRET from environment
+# if the KEYFILE is not available
+KEYFILE = "./credentials/service-account.json"
+if not os.path.isfile(KEYFILE):
+    try:
+        SHEET_SECRET = os.environ["SHEET_SECRET"]
+    except KeyError:
+        logging.error("Sheet secret not available. Fail!")
+
+    with open("./credentials/service-account.json", "w") as f:
+        json.dump(SHEET_SECRET, f)
+
 
 def clean_data(data):
     """
