@@ -33,20 +33,23 @@ jobs:
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
       - name: Install Python dependencies
-        run: pip install -r req.txt
+        run: pip install -r requirements.txt
       - name: Start Bot
         run: |
-          python bot.py
+          python bot.py &
+      - name: Sleep
+        run: |
+          sleep 2h
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           BIN_CHANNEL: ${{ secrets.BIN_CHANNEL}}
           SCHEDULE_CHANNEL: ${{ secrets.SCHEDULE_CHANNEL }}
           SHEET_SECRET: ${{ secrets.SHEET_SECRET }}
-          # UPDATE_ID: ${{ github.event.client_payload.update_id }}
+          UPDATE_ID: ${{ github.event.client_payload.update_id }}
       - name: Repository Dispatch
         uses: actions/github-script@v2
         with:
-          github-token: ${{secrets.JUN_TOKEN}}
+          github-token: ${{secrets.BOB_TOKEN}}
           script: |
             const fs = require('fs');
             update_id = fs.readFileSync('/tmp/update_id', 'utf8');
