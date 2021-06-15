@@ -36,10 +36,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Start Bot
         run: |
-          python bot.py &
-      - name: Sleep
-        run: |
-          sleep 2h
+          python bot.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           BIN_CHANNEL: ${{ secrets.BIN_CHANNEL}}

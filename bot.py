@@ -6,11 +6,14 @@ from analytics import Analytics
 import json
 import os
 import ast
-from time import sleep
+from time import sleep,time
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from pytz import timezone
+
+# How long the container exist
+LIFESPAN = 7200
 
 IST = timezone("Asia/Kolkata")
 
@@ -594,6 +597,8 @@ def main():
     Run the bot in perpetuity
     """
 
+    start_time = int(time())
+
     try:
         BOT_TOKEN = os.environ["BOT_TOKEN"]
     except KeyError:
@@ -612,28 +617,42 @@ def main():
         logging.error(f"Analytics engine couldn't start : {e}")
         lytics = None
 
+    sent_today = False
     while True:
-        # Send scheduled message if it has been more than specified time interval
-        with open("metadata.json", "r") as f:
-            meta = json.load(f)
-        try:
-            scheduled_sent_time = datetime.strptime(
-                meta["scheduled_sent_time"], "%Y-%m-%d %H:%M:%S%z"
-            )
-            logging.debug(f"Last scheduled sent : {meta['scheduled_sent_time']}")
-        except KeyError:
-            scheduled_sent_time = datetime.strptime(
-                "1900-01-01 00:00:00+05:30", "%Y-%m-%d %H:%M:%S%z"
-            )
+        # Send scheduled message
+        # with open("metadata.json", "r") as f:
+        #     meta = json.load(f)
+        # try:
+        #     scheduled_sent_time = datetime.strptime(
+        #         meta["scheduled_sent_time"], "%Y-%m-%d %H:%M:%S%z"
+        #     )
+        #     logging.debug(f"Last scheduled sent : {meta['scheduled_sent_time']}")
+        # except KeyError:
+        #     scheduled_sent_time = datetime.strptime(
+        #         "1900-01-01 00:00:00+05:30", "%Y-%m-%d %H:%M:%S%z"
+        #     )
 
+        # time_now = datetime.now(IST)
+        # if (time_now - scheduled_sent_time) > timedelta(minutes=SCHEDULE_MSG_MIN):
+        #     send_to_channel(bot)
+        #     logging.info("Sent scheduled message to channel")
+        #     meta["scheduled_sent_time"] = time_now.strftime("%Y-%m-%d %H:%M:%S%z")
+        #     with open("metadata.json", "w") as f:
+        #         json.dump(meta, f, indent=4)
+
+        # Send scheduled message everyday at 8AM
         time_now = datetime.now(IST)
-        if (time_now - scheduled_sent_time) > timedelta(minutes=SCHEDULE_MSG_MIN):
+        send_hour = time_now.strftime("%Y-%m-%d 08:00:00+05:30")
+        if (
+            time_now - datetime.strptime(send_hour, "%Y-%m-%d %H:%M:%S%z")
+            < timedelta(minutes=1)
+        ) & ~sent_today:
             send_to_channel(bot)
+            sent_today = True
             logging.info("Sent scheduled message to channel")
-            meta["scheduled_sent_time"] = time_now.strftime("%Y-%m-%d %H:%M:%S%z")
+            meta["scheduled_sent_time"] = time_now.strftime("%Y-%m-%d 08:00:00+05:30")
             with open("metadata.json", "w") as f:
                 json.dump(meta, f, indent=4)
-
         try:
             for update in bot.get_updates(offset=update_id, timeout=10):
                 update_id = update.update_id + 1
@@ -686,7 +705,11 @@ def main():
         except Unauthorized:
             logging.error("User has blocked the bot")
             update_id = update_id + 1
-
+        if int(time()) - start_time > LIFESPAN:
+            logging.info("Enough for the day! Passing on to next Meeseek")
+            with open("/tmp/update_id", "w") as the_file:
+                the_file.write(str(update_id))
+            break
 
 if __name__ == "__main__":
     main()
