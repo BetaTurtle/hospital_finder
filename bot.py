@@ -6,7 +6,7 @@ from analytics import Analytics
 import json
 import os
 import ast
-from time import sleep,time
+from time import sleep, time
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -644,15 +644,12 @@ def main():
         time_now = datetime.now(IST)
         send_hour = time_now.strftime("%Y-%m-%d 08:00:00+05:30")
         if (
-            time_now - datetime.strptime(send_hour, "%Y-%m-%d %H:%M:%S%z")
+            abs(time_now - datetime.strptime(send_hour, "%Y-%m-%d %H:%M:%S%z"))
             < timedelta(minutes=1)
         ) & ~sent_today:
             send_to_channel(bot)
             sent_today = True
             logging.info("Sent scheduled message to channel")
-            meta["scheduled_sent_time"] = time_now.strftime("%Y-%m-%d 08:00:00+05:30")
-            with open("metadata.json", "w") as f:
-                json.dump(meta, f, indent=4)
         try:
             for update in bot.get_updates(offset=update_id, timeout=10):
                 update_id = update.update_id + 1
@@ -710,6 +707,7 @@ def main():
             with open("/tmp/update_id", "w") as the_file:
                 the_file.write(str(update_id))
             break
+
 
 if __name__ == "__main__":
     main()
